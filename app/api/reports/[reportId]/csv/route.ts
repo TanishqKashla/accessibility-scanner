@@ -10,7 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ reportId: string }> }
 ) {
   try {
-    const user = verifyAuth(req);
+    const user = await verifyAuth(req);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
