@@ -164,7 +164,7 @@ export default function ScanDetailPage({
     URL.revokeObjectURL(url);
   }
 
-  const handleExport = async (format: "csv" | "pdf" | "json") => {
+  const handleExport = async (format: "excel" | "pdf" | "json") => {
     if (!report) return;
     setExporting(true);
     setShowExportMenu(false);
@@ -182,8 +182,8 @@ export default function ScanDetailPage({
           headers: { Authorization: `Bearer ${token}` },
         });
         const blob = await res.blob();
-        const ext = format === "pdf" ? "pdf" : "csv";
-        downloadBlob(blob, `${domain}-report.${ext}`);
+        const ext = format === "pdf" ? "pdf" : "xlsx";
+        downloadBlob(blob, `${domain}-wcag-compliance.${ext}`);
       }
     } catch (err) {
       console.error("Export failed:", err);
@@ -321,9 +321,9 @@ export default function ScanDetailPage({
                 </Button>
                 {showExportMenu && (
                   <div className="absolute right-0 top-full mt-1 z-10 w-36 rounded-lg border border-border bg-card py-1 shadow-lg">
-                    <button onClick={() => handleExport("pdf")} className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-sidebar-hover">PDF Report</button>
-                    <button onClick={() => handleExport("csv")} className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-sidebar-hover">CSV Issues</button>
-                    <button onClick={() => handleExport("json")} className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-sidebar-hover">JSON Data</button>
+                    <button onClick={() => handleExport("pdf")}   className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-sidebar-hover">PDF Report</button>
+                    <button onClick={() => handleExport("excel")} className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-sidebar-hover">Excel (.xlsx)</button>
+                    <button onClick={() => handleExport("json")}  className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-sidebar-hover">JSON Data</button>
                   </div>
                 )}
               </div>
