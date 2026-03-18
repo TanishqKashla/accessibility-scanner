@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 import connectMongo from "@/lib/db/connection";
 import User from "@/lib/db/models/User";
 import Organization from "@/lib/db/models/Organization";
-import { signJWT } from "@/lib/auth/jwt";
 
 interface RegisterBody {
   email?: string;
@@ -55,17 +54,8 @@ export async function POST(request: Request) {
     name,
   });
 
-  const token = signJWT({
-    userId: user._id.toString(),
-    orgId: organization._id.toString(),
-    role: user.role,
-    email: user.email,
-    name: user.name,
-  });
-
   return NextResponse.json(
     {
-      token,
       user: {
         id: user._id,
         email: user.email,

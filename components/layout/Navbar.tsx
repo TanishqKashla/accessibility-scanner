@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
 import {
   Bell,
   Plus,
@@ -13,7 +14,17 @@ import {
 } from "lucide-react";
 
 export default function Navbar() {
+  const { data: session } = useSession();
   const [profileOpen, setProfileOpen] = useState(false);
+
+  const userName = session?.user?.name ?? session?.user?.email ?? "User";
+  const userEmail = session?.user?.email ?? "";
+  const initials = userName.charAt(0).toUpperCase();
+
+  const handleSignOut = async () => {
+    setProfileOpen(false);
+    await signOut({ callbackUrl: "/login" });
+  };
 
   return (
     <nav
@@ -38,7 +49,7 @@ export default function Navbar() {
       <div className="hidden md:flex items-center gap-1">
         <NavLink href="/scans">Products</NavLink>
         <NavLink href="/invite">Invite Team</NavLink>
-        <NavLink href="/pricing">Plans & Pricing</NavLink>
+        <NavLink href="/pricing">Plans &amp; Pricing</NavLink>
       </div>
 
       {/* Right Actions */}
@@ -73,7 +84,7 @@ export default function Navbar() {
             aria-haspopup="true"
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-primary to-blue-400 text-sm font-semibold text-white">
-              T
+              {initials}
             </div>
             <ChevronDown
               className={`h-4 w-4 transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`}
@@ -88,22 +99,26 @@ export default function Navbar() {
               />
               <div className="absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-xl border border-border bg-card shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="border-b border-border p-3">
-                  <p className="text-sm font-semibold text-foreground">
-                    Tanishq Kashla
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {userName}
                   </p>
-                  <p className="text-xs text-muted">tanishq@example.com</p>
+                  <p className="text-xs text-muted truncate">{userEmail}</p>
                 </div>
                 <div className="p-1.5">
-                  <DropdownItem href="/settings" icon={Settings}>
+                  <DropdownItem href="/settings" icon={Settings} onClick={() => setProfileOpen(false)}>
                     Settings
                   </DropdownItem>
-                  <DropdownItem href="/profile" icon={User}>
+                  <DropdownItem href="/profile" icon={User} onClick={() => setProfileOpen(false)}>
                     Profile
                   </DropdownItem>
                   <hr className="my-1.5 border-border" />
-                  <DropdownItem href="/logout" icon={LogOut} danger>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-fail transition-colors hover:bg-fail-bg"
+                  >
+                    <LogOut className="h-4 w-4" />
                     Sign Out
-                  </DropdownItem>
+                  </button>
                 </div>
               </div>
             </>
@@ -135,21 +150,18 @@ function DropdownItem({
   href,
   icon: Icon,
   children,
-  danger = false,
+  onClick,
 }: {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
-  danger?: boolean;
+  onClick?: () => void;
 }) {
   return (
     <Link
       href={href}
-      className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
-        danger
-          ? "text-fail hover:bg-fail-bg"
-          : "text-foreground hover:bg-sidebar-hover"
-      }`}
+      onClick={onClick}
+      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-sidebar-hover"
     >
       <Icon className="h-4 w-4" />
       {children}

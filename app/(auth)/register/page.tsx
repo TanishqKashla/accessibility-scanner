@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Shield, Mail, Lock, User, Building2, Eye, EyeOff } from "lucide-react";
@@ -29,6 +30,7 @@ export default function RegisterPage() {
     setError("");
 
     try {
+      // Step 1: Create the account
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -43,11 +45,21 @@ export default function RegisterPage() {
         return;
       }
 
-      // Store token and user info
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // Step 2: Sign in via NextAuth to establish a session
+      const result = await signIn("credentials", {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Account created but sign-in failed. Please log in manually.");
+        setLoading(false);
+        return;
+      }
 
       router.push("/scans");
+      router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);
@@ -72,7 +84,10 @@ export default function RegisterPage() {
       </div>
 
       {/* Form Card */}
-      <div className="rounded-2xl border border-border bg-card p-8" style={{ boxShadow: "var(--shadow-card)" }}>
+      <div
+        className="rounded-2xl border border-border bg-card p-8"
+        style={{ boxShadow: "var(--shadow-card)" }}
+      >
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Error */}
           {error && (
@@ -83,7 +98,10 @@ export default function RegisterPage() {
 
           {/* Name */}
           <div>
-            <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
+            <label
+              htmlFor="name"
+              className="mb-1.5 block text-sm font-medium text-foreground"
+            >
               Full Name
             </label>
             <div className="relative">
@@ -102,7 +120,10 @@ export default function RegisterPage() {
 
           {/* Email */}
           <div>
-            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
+            <label
+              htmlFor="email"
+              className="mb-1.5 block text-sm font-medium text-foreground"
+            >
               Email <span className="text-fail">*</span>
             </label>
             <div className="relative">
@@ -122,7 +143,10 @@ export default function RegisterPage() {
 
           {/* Password */}
           <div>
-            <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">
+            <label
+              htmlFor="password"
+              className="mb-1.5 block text-sm font-medium text-foreground"
+            >
               Password <span className="text-fail">*</span>
             </label>
             <div className="relative">
@@ -144,15 +168,23 @@ export default function RegisterPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-light hover:text-muted"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
 
           {/* Organization */}
           <div>
-            <label htmlFor="orgName" className="mb-1.5 block text-sm font-medium text-foreground">
-              Organization <span className="text-xs text-muted">(optional)</span>
+            <label
+              htmlFor="orgName"
+              className="mb-1.5 block text-sm font-medium text-foreground"
+            >
+              Organization{" "}
+              <span className="text-xs text-muted">(optional)</span>
             </label>
             <div className="relative">
               <Building2 className="absolute left-3 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-muted-light" />
@@ -178,7 +210,10 @@ export default function RegisterPage() {
       {/* Login Link */}
       <p className="mt-6 text-center text-sm text-muted">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-primary hover:text-primary-hover">
+        <Link
+          href="/login"
+          className="font-medium text-primary hover:text-primary-hover"
+        >
           Sign in
         </Link>
       </p>

@@ -1,27 +1,41 @@
-import { NextRequest, NextResponse } from "next/server";
-import { verifyJWT, type JwtUser } from "@/lib/auth/jwt";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth/authOptions";
+import { NextResponse } from "next/server";
+import type { UserRole } from "@/lib/db/models/User";
 
-export function getAuth(request: NextRequest): { user: JwtUser } | { error: NextResponse } {
-  const authHeader = request.headers.get("authorization");
-  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
-
-  if (!token) {
-    return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
-  }
-
-  try {
-    const user = verifyJWT(token);
-    return { user };
-  } catch {
-    return { error: NextResponse.json({ error: "Invalid or expired token" }, { status: 401 }) };
-  }
+export interface JwtUser {
+  userId: string;
+  orgId: string;
+  role: UserRole;
+  email: string;
+  name?: string;
 }
 
-/**
- * Verify auth and return the user, or null if unauthorized.
- */
-export function verifyAuth(request: NextRequest): JwtUser | null {
-  const result = getAuth(request);
+export async function getAuth(
+  // kept for backward-compatibility — no longer used, session is read from cookies
+  _req?: unknown
+): Promise<{ user: JwtUser } | { error: NextResponse }> {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return {
+      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    };
+  }
+
+  return {
+    user: {
+      userId: session.user.id,
+      orgId: session.user.orgId,
+      role: session.user.role as UserRole,
+      email: session.user.email,
+      name: session.user.name ?? undefined,
+    },
+  };
+}
+
+export async function verifyAuth(_req?: unknown): Promise<JwtUser | null> {
+  const result = await getAuth();
   if ("error" in result) return null;
   return result.user;
 }
