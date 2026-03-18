@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connection";
 import { verifyAuth } from "@/lib/auth/middleware";
-import { generateCsv } from "@/lib/export/csv";
+import { generateExcel } from "@/lib/export/excel";
 import mongoose from "mongoose";
 
-// GET /api/reports/:reportId/csv — Download CSV export
+// GET /api/reports/:reportId/excel — Download styled Excel export
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ reportId: string }> }
@@ -40,61 +40,59 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Extract WCAG summary from report breakdown
-    const breakdown = reportData.breakdown as Record<string, unknown> | undefined;
+    const breakdown  = reportData.breakdown as Record<string, unknown> | undefined;
     const wcagSummary = breakdown?.wcagSummary as Record<string, unknown> | undefined;
     const rawTopRules = (wcagSummary?.topRules as Array<Record<string, unknown>>) ?? [];
-    const totalPages = (breakdown?.pagesScanned as number) ?? 1;
+    const totalPages  = (breakdown?.pagesScanned as number) ?? 1;
 
-    // Query PageResults to compute per-rule page counts and descriptions.
-    // Only fetch the fields we need to keep the query lightweight.
+    // Build per-rule page counts and descriptions from PageResults
     const pages = await PageResult.find({ scanId: reportData.scanId })
       .select("issues")
       .lean() as Array<{ issues: Array<Record<string, unknown>> }>;
 
-    // Build ruleId → { pageCount, description } from page results
-    const rulePageSets = new Map<string, Set<number>>(); // ruleId → set of page indices
-    const ruleDescriptions = new Map<string, string>();  // ruleId → description text
+    const rulePageSets   = new Map<string, Set<number>>();
+    const ruleDescriptions = new Map<string, string>();
 
     pages.forEach((page, pageIndex) => {
       for (const issue of page.issues ?? []) {
         const ruleId = issue.ruleId as string;
         if (!ruleId) continue;
-
         if (!rulePageSets.has(ruleId)) rulePageSets.set(ruleId, new Set());
         rulePageSets.get(ruleId)!.add(pageIndex);
-
         if (!ruleDescriptions.has(ruleId) && issue.description) {
           ruleDescriptions.set(ruleId, issue.description as string);
         }
       }
     });
 
-    const csv = generateCsv({
+    const buffer = await generateExcel({
       criteriaViolated: (wcagSummary?.criteriaViolated as string[]) ?? [],
       totalPages,
+      targetUrl: (scanData.targetUrl as string) ?? "",
+      scanDate:  (reportData.createdAt as Date | string | undefined)?.toString() ?? new Date().toISOString(),
       topRules: rawTopRules.map((r) => {
         const ruleId = (r.ruleId as string) ?? "";
         return {
           ruleId,
-          wcag: (r.wcag as string[]) ?? [],
+          wcag:         (r.wcag as string[]) ?? [],
           pagesFailedOn: rulePageSets.get(ruleId)?.size ?? 0,
-          description: ruleDescriptions.get(ruleId) ?? "",
+          description:   ruleDescriptions.get(ruleId) ?? "",
         };
       }),
     });
+
     const domain = (() => {
       try { return new URL(scanData.targetUrl as string).hostname; } catch { return "report"; }
     })();
 
-    return new Response(csv, {
+    return new Response(buffer, {
       headers: {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="${domain}-accessibility-report.csv"`,
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="${domain}-wcag-compliance.xlsx"`,
       },
     });
   } catch (error) {
-    console.error("[GET /api/reports/:reportId/csv] Error:", error);
+    console.error("[GET /api/reports/:reportId/excel] Error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
