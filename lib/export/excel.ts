@@ -19,7 +19,7 @@ const COLOUR = {
 };
 
 // ─── Column definitions ──────────────────────────────────────────────────────
-const COLUMNS: Array<{ header: string; key: string; width: number; alignment: ExcelJS.Alignment }> = [
+const COLUMNS: Array<{ header: string; key: string; width: number; alignment: Partial<ExcelJS.Alignment> }> = [
   { header: "SC",                key: "sc",          width: 8,   alignment: { horizontal: "center", vertical: "middle" } },
   { header: "Criterion Name",    key: "name",        width: 42,  alignment: { horizontal: "left",   vertical: "middle" } },
   { header: "Level",             key: "level",       width: 8,   alignment: { horizontal: "center", vertical: "middle" } },

@@ -10,7 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ reportId: string }> }
 ) {
   try {
-    const user = verifyAuth(req);
+    const user = await verifyAuth(req);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -85,7 +85,7 @@ export async function GET(
       try { return new URL(scanData.targetUrl as string).hostname; } catch { return "report"; }
     })();
 
-    return new Response(buffer, {
+    return new Response(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${domain}-wcag-compliance.xlsx"`,
