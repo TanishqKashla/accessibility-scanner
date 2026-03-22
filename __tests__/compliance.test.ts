@@ -44,7 +44,7 @@ describe("evaluateCompliance", () => {
     expect(result.generatedAt).toBeTruthy();
   });
 
-  it("returns fail for pages with many critical issues", () => {
+  it("returns low score for pages with many critical issues (v2.0 logarithmic)", () => {
     const result = evaluateCompliance([
       {
         url: "https://example.com",
@@ -52,13 +52,14 @@ describe("evaluateCompliance", () => {
           {
             ruleId: "image-alt",
             impact: "critical",
-            nodes: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}], // 10 nodes × 10 = 100 penalty
+            // v2.0: penalty = 10 × log₂(11) ≈ 34.59 → score = round(65.41) = 65
+            nodes: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
           },
         ],
       },
     ]);
-    expect(result.score).toBe(0);
-    expect(result.status).toBe("fail");
+    expect(result.score).toBe(65);
+    expect(result.status).toBe("partial");
   });
 
   it("includes WCAG summary", () => {
@@ -90,7 +91,7 @@ describe("evaluateCompliance", () => {
     const result = evaluateCompliance([
       { url: "https://example.com", issues: [] },
     ]);
-    expect(result.methodology.version).toBe("1.0");
+    expect(result.methodology.version).toBe("2.0");
     expect(result.thresholds).toEqual(DEFAULT_THRESHOLDS);
   });
 

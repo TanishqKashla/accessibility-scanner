@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { seedQueue } from "@/lib/queue/queues";
 import axePkg from "axe-core/package.json";
 import playwrightPkg from "playwright/package.json";
+import { scanLimiter, rateLimitResponse } from "@/lib/ratelimit";
 
 // POST /api/scans — Create a new scan
 export async function POST(req: NextRequest) {
@@ -13,6 +14,9 @@ export async function POST(req: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { success, reset } = await scanLimiter.limit(user.userId);
+    if (!success) return rateLimitResponse(reset - Date.now());
 
     const body = await req.json();
     const { targetUrl, config = {} } = body;

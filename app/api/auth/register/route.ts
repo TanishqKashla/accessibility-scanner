@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import connectMongo from "@/lib/db/connection";
 import User from "@/lib/db/models/User";
 import Organization from "@/lib/db/models/Organization";
+import { authLimiter, rateLimitResponse } from "@/lib/ratelimit";
 
 interface RegisterBody {
   email?: string;
@@ -15,7 +16,11 @@ function isValidEmail(email: string) {
   return /[^@\s]+@[^@\s]+\.[^@\s]+/.test(email);
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ?? "anonymous";
+  const { success, reset } = await authLimiter.limit(ip);
+  if (!success) return rateLimitResponse(reset - Date.now());
+
   const body = (await request.json()) as RegisterBody;
   const email = body.email?.trim().toLowerCase();
   const password = body.password?.trim();
