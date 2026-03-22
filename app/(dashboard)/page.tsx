@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import {
   Globe,
@@ -16,6 +17,7 @@ import ScanCard, { type ScanData } from "@/components/scans/ScanCard";
 import { SkeletonCard } from "@/components/ui/Loading";
 
 export default function DashboardPage() {
+  const { status } = useSession();
   const [recentScans, setRecentScans] = useState<ScanData[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -26,17 +28,11 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
+    if (status !== "authenticated") return;
+
     async function fetchData() {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setLoading(false);
-          return;
-        }
-
-        const res = await fetch("/api/scans?limit=5", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch("/api/scans?limit=5");
 
         if (res.ok) {
           const data = await res.json();
@@ -67,7 +63,7 @@ export default function DashboardPage() {
     }
 
     fetchData();
-  }, []);
+  }, [status]);
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
@@ -155,7 +151,7 @@ export default function DashboardPage() {
       </Card>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <QuickActionCard
           title="Scan a Website"
           description="Enter a URL to run a full accessibility audit"
@@ -169,13 +165,6 @@ export default function DashboardPage() {
           icon={<CheckCircle2 className="h-6 w-6" />}
           href="/scans"
           color="pass"
-        />
-        <QuickActionCard
-          title="Documentation"
-          description="Learn how to configure scans and interpret results"
-          icon={<AlertTriangle className="h-6 w-6" />}
-          href="/docs"
-          color="moderate"
         />
       </div>
     </div>

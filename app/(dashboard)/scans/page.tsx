@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import {
   Plus,
@@ -18,25 +19,20 @@ import { SkeletonCard } from "@/components/ui/Loading";
 type TabType = "all" | "my";
 
 export default function AllScansPage() {
+  const { status } = useSession();
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [scans, setScans] = useState<ScanData[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchScans = useCallback(async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+    if (status !== "authenticated") return;
 
+    try {
       const params = new URLSearchParams();
       if (activeTab === "my") params.set("myScans", "true");
 
-      const res = await fetch(`/api/scans?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(`/api/scans?${params.toString()}`);
 
       if (res.ok) {
         const data = await res.json();
@@ -47,7 +43,7 @@ export default function AllScansPage() {
     } finally {
       setLoading(false);
     }
-  }, [activeTab]);
+  }, [activeTab, status]);
 
   useEffect(() => {
     fetchScans();

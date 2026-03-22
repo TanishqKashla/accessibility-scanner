@@ -24,11 +24,12 @@ const COLUMNS: Array<{ header: string; key: string; width: number; alignment: Pa
   { header: "Criterion Name",    key: "name",        width: 42,  alignment: { horizontal: "left",   vertical: "middle" } },
   { header: "Level",             key: "level",       width: 8,   alignment: { horizontal: "center", vertical: "middle" } },
   { header: "Status",            key: "status",      width: 14,  alignment: { horizontal: "center", vertical: "middle" } },
-  { header: "Notes",             key: "notes",       width: 46,  alignment: { horizontal: "left",   vertical: "middle" } },
-  { header: "Issue Description", key: "description", width: 58,  alignment: { horizontal: "left",   vertical: "middle" } },
+  { header: "Notes",              key: "notes",       width: 56,  alignment: { horizontal: "left",   vertical: "middle" } },
+  { header: "Issue Description",  key: "description", width: 58,  alignment: { horizontal: "left",   vertical: "middle" } },
+  { header: "Why It's Important", key: "rationale",   width: 58,  alignment: { horizontal: "left",   vertical: "middle" } },
 ];
 
-const LAST_COL = COLUMNS.length; // 6 = column F
+const LAST_COL = COLUMNS.length; // 7 = column G
 
 const DISCLAIMER =
   "This report is generated through an automated accessibility evaluation process based on " +
@@ -75,6 +76,60 @@ export interface ExcelCsvInput {
   targetUrl: string;
   scanDate: string; // ISO date string
 }
+
+// ─── WCAG 2.1 rationale map (SC → why it matters) ────────────────────────────
+const WCAG_RATIONALE: Record<string, string> = {
+  "1.1.1":  "Ensures screen reader users can understand images and visual elements via alt text.",
+  "1.2.1":  "Provides alternatives so deaf or blind users can access media content.",
+  "1.2.2":  "Allows deaf users to understand spoken content in videos.",
+  "1.2.3":  "Helps blind users understand visual information in videos.",
+  "1.2.4":  "Makes live video content accessible to deaf users in real time.",
+  "1.2.5":  "Improves accessibility of visual-only content in videos.",
+  "1.3.1":  "Ensures proper structure so assistive technologies can interpret content correctly.",
+  "1.3.2":  "Maintains logical reading order for screen reader users.",
+  "1.3.3":  "Prevents reliance on visual cues like color or position alone.",
+  "1.3.4":  "Allows usage in both portrait and landscape for better accessibility.",
+  "1.3.5":  "Helps autofill and assistive tools support users with cognitive disabilities.",
+  "1.4.1":  "Ensures colorblind users don't miss important information.",
+  "1.4.2":  "Prevents interference with screen readers from auto-playing audio.",
+  "1.4.3":  "Improves readability for users with low vision.",
+  "1.4.4":  "Allows users to enlarge text without breaking layout.",
+  "1.4.5":  "Ensures text remains readable and accessible to assistive tools.",
+  "1.4.10": "Prevents horizontal scrolling for users with low vision.",
+  "1.4.11": "Ensures UI elements like buttons are clearly visible.",
+  "1.4.12": "Supports users who need adjusted spacing for readability.",
+  "1.4.13": "Prevents hidden content from disappearing unexpectedly.",
+  "2.1.1":  "Enables users with motor disabilities to navigate without a mouse.",
+  "2.1.2":  "Ensures users don't get stuck while navigating via keyboard.",
+  "2.1.4":  "Prevents accidental activation of shortcuts by assistive tech users.",
+  "2.2.1":  "Gives users enough time to read and interact with content.",
+  "2.2.2":  "Allows users to control moving or auto-updating content.",
+  "2.3.1":  "Prevents seizures in users with photosensitive epilepsy.",
+  "2.4.1":  "Lets users skip repetitive navigation using keyboard.",
+  "2.4.2":  "Helps users understand the purpose of each page.",
+  "2.4.3":  "Maintains logical navigation order for keyboard users.",
+  "2.4.4":  "Ensures links are understandable without extra context.",
+  "2.4.5":  "Provides different navigation methods like search or menus.",
+  "2.4.6":  "Improves navigation and understanding of content structure.",
+  "2.4.7":  "Shows clear focus indicators for keyboard users.",
+  "2.5.1":  "Avoids complex gestures that are difficult for motor-impaired users.",
+  "2.5.2":  "Prevents accidental clicks from causing actions.",
+  "2.5.3":  "Supports voice control users by matching visible labels.",
+  "2.5.4":  "Ensures functionality without requiring device motion.",
+  "3.1.1":  "Helps screen readers pronounce content correctly.",
+  "3.1.2":  "Ensures correct pronunciation of mixed-language content.",
+  "3.2.1":  "Prevents unexpected changes when elements receive focus.",
+  "3.2.2":  "Avoids sudden changes when users enter data.",
+  "3.2.3":  "Reduces confusion through consistent layouts.",
+  "3.2.4":  "Ensures UI elements behave consistently.",
+  "3.3.1":  "Helps users understand what went wrong in forms.",
+  "3.3.2":  "Provides clear guidance for user inputs.",
+  "3.3.3":  "Helps users fix mistakes easily.",
+  "3.3.4":  "Prevents serious mistakes in important actions.",
+  "4.1.1":  "Ensures clean code for compatibility with assistive technologies.",
+  "4.1.2":  "Allows assistive tech to understand UI components properly.",
+  "4.1.3":  "Ensures screen readers announce dynamic updates.",
+};
 
 // ─── Complete WCAG 2.1 Level A + AA criteria ─────────────────────────────────
 const WCAG_21_CRITERIA: Array<{ sc: string; name: string; level: "A" | "AA" }> = [
@@ -205,12 +260,14 @@ export async function generateExcel(input: ExcelCsvInput): Promise<Buffer> {
     if (failed) {
       const rules = scToRules.get(criterion.sc) ?? [];
       notes = rules
-        .map((r) => `${r.ruleId} (failed on ${r.pagesFailedOn}/${totalPages} pages)`)
+        .map((r) => `${r.ruleId} (Failed on ${totalPages > 0 ? Math.round((r.pagesFailedOn / totalPages) * 100) : 0}% pages)`)
         .join("\n");
       issueDescription = rules
         .map((r) => r.description)
         .filter(Boolean)
         .join("\n");
+    } else {
+      notes = "No issues detected. All automated checks passed for this criterion.";
     }
 
     const lineCount = Math.max(
@@ -218,7 +275,7 @@ export async function generateExcel(input: ExcelCsvInput): Promise<Buffer> {
       issueDescription.split("\n").length,
       1
     );
-    const dataRow = ws.addRow([criterion.sc, criterion.name, criterion.level, status, notes, issueDescription]);
+    const dataRow = ws.addRow([criterion.sc, criterion.name, criterion.level, status, notes, issueDescription, WCAG_RATIONALE[criterion.sc] ?? ""]);
     dataRow.height = lineCount > 1 ? 14 * (lineCount + 1) : 18;
 
     // Apply column-level alignment and borders to every data cell
