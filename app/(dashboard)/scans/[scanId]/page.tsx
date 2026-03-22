@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, use } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import {
   ChevronRight,
@@ -67,6 +68,7 @@ export default function ScanDetailPage({
   params: Promise<{ scanId: string }>;
 }) {
   const { scanId } = use(params);
+  const { status } = useSession();
   const [scan, setScan] = useState<ScanDetail | null>(null);
   const [report, setReport] = useState<ReportDetail | null>(null);
   const [pageCount, setPageCount] = useState(0);
@@ -80,16 +82,7 @@ export default function ScanDetailPage({
 
   const fetchScan = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setError("Unauthorized");
-        setLoading(false);
-        return;
-      }
-
-      const res = await fetch(`/api/scans/${scanId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(`/api/scans/${scanId}`);
 
       if (!res.ok) {
         setError("Failed to load scan");
@@ -109,22 +102,16 @@ export default function ScanDetailPage({
   }, [scanId]);
 
   useEffect(() => {
-    fetchScan();
-  }, [fetchScan]);
+    if (status === "authenticated") fetchScan();
+  }, [fetchScan, status]);
 
-  // SSE for live progress when scan is running
+  // Poll for live progress when scan is running
   useEffect(() => {
     if (!scan || (scan.status !== "running" && scan.status !== "queued")) return;
 
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    // Use polling instead of native EventSource to include auth headers
     const pollInterval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/scans/${scanId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(`/api/scans/${scanId}`);
         if (res.ok) {
           const data = await res.json();
           setScan(data.scan);
@@ -169,18 +156,13 @@ export default function ScanDetailPage({
     setExporting(true);
     setShowExportMenu(false);
     try {
-      const token = localStorage.getItem("token");
       if (format === "json") {
-        const res = await fetch(`/api/reports/${report._id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(`/api/reports/${report._id}`);
         const data = await res.json();
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
         downloadBlob(blob, `${domain}-report.json`);
       } else {
-        const res = await fetch(`/api/reports/${report._id}/${format}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(`/api/reports/${report._id}/${format}`);
         const blob = await res.blob();
         const ext = format === "pdf" ? "pdf" : "xlsx";
         downloadBlob(blob, `${domain}-wcag-compliance.${ext}`);
@@ -195,13 +177,9 @@ export default function ScanDetailPage({
   const handleShare = async () => {
     if (!report) return;
     try {
-      const token = localStorage.getItem("token");
       const res = await fetch(`/api/reports/${report._id}/share`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ expiresInDays: 7 }),
       });
       if (res.ok) {
@@ -218,11 +196,7 @@ export default function ScanDetailPage({
     if (!confirm("Stop this scan? A partial report will be generated from pages scanned so far.")) return;
     setStopping(true);
     try {
-      const token = localStorage.getItem("token");
-      await fetch(`/api/scans/${scanId}/stop`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await fetch(`/api/scans/${scanId}/stop`, { method: "POST" });
       // Refresh immediately
       await fetchScan();
     } catch (err) {

@@ -3,32 +3,32 @@
 /* ─── Design System Tokens ─── */
 @theme inline {
   /* Primary */
-  --color-primary: #2563EB;
-  --color-primary-hover: #1D4ED8;
-  --color-primary-light: #DBEAFE;
-  --color-primary-50: #EFF6FF;
+  --color-primary: #330064;
+  --color-primary-hover: #26004d;
+  --color-primary-light: #e8d5f5;
+  --color-primary-50: #f5eeff;
 
   /* Neutral */
-  --color-background: #F8FAFC;
+  --color-background: #FFFFFF;
   --color-card: #FFFFFF;
   --color-border: #E5E7EB;
   --color-border-light: #F1F5F9;
 
   /* Text */
-  --color-foreground: #0F172A;
+  --color-foreground: #111827;
   --color-muted: #64748B;
   --color-muted-light: #94A3B8;
 
   /* Navbar */
-  --color-navbar: #0F172A;
+  --color-navbar: #330064;
   --color-navbar-text: #FFFFFF;
 
   /* Sidebar */
-  --color-sidebar: #F8FAFC;
-  --color-sidebar-hover: #F1F5F9;
-  --color-sidebar-active: #EFF6FF;
-  --color-sidebar-active-text: #2563EB;
-  --color-sidebar-active-border: #2563EB;
+  --color-sidebar: #F9FAFB;
+  --color-sidebar-hover: #F3F0F8;
+  --color-sidebar-active: #f5eeff;
+  --color-sidebar-active-text: #330064;
+  --color-sidebar-active-border: #330064;
 
   /* Severity */
   --color-critical: #EF4444;

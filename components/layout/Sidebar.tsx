@@ -6,12 +6,6 @@ import {
   Home,
   LayoutDashboard,
   Globe,
-  GitBranch,
-  MousePointerClick,
-  Monitor,
-  Zap,
-  Puzzle,
-  BookOpen,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -40,27 +34,6 @@ const navGroups: NavGroup[] = [
     title: "Scan & Monitor",
     items: [
       { label: "Website Scanner", href: "/scans", icon: Globe },
-    ],
-  },
-  {
-    title: "Manual Testing",
-    items: [
-      { label: "Workflow Analyzer", href: "/workflow", icon: GitBranch },
-      { label: "Assisted Tests", href: "/assisted", icon: MousePointerClick },
-      { label: "Screen Readers", href: "/screen-readers", icon: Monitor },
-    ],
-  },
-  {
-    title: "Automation",
-    items: [
-      { label: "Automated Tests", href: "/automation", icon: Zap },
-    ],
-  },
-  {
-    title: "Other",
-    items: [
-      { label: "Integrations", href: "/integrations", icon: Puzzle },
-      { label: "Documentation", href: "/docs", icon: BookOpen },
     ],
   },
 ];

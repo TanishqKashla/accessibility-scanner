@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
   Globe,
@@ -16,6 +17,7 @@ import Button from "@/components/ui/Button";
 
 export default function NewScanPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [url, setUrl] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [config, setConfig] = useState({
@@ -45,8 +47,7 @@ export default function NewScanPage() {
     setError("");
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
+      if (!session) {
         setError("You must be logged in to start a scan.");
         setLoading(false);
         return;
@@ -56,7 +57,6 @@ export default function NewScanPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           targetUrl: url,
