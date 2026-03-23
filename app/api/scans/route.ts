@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connection";
 import { verifyAuth } from "@/lib/auth/middleware";
+import { scanLimiter, apiLimiter, rateLimitResponse } from "@/lib/ratelimit";
+import { logger } from "@/lib/logger";
 import mongoose from "mongoose";
 import { seedQueue } from "@/lib/queue/queues";
 import axePkg from "axe-core/package.json";
 import playwrightPkg from "playwright/package.json";
-import { scanLimiter, rateLimitResponse } from "@/lib/ratelimit";
 
 // POST /api/scans — Create a new scan
 export async function POST(req: NextRequest) {
@@ -39,11 +40,19 @@ export async function POST(req: NextRequest) {
     await connectDB();
     const Scan = mongoose.models.Scan;
 
+    const isAdmin = user.role === "admin";
+
     const scanConfig = {
-      depth: Math.min(Math.max(config.depth || 3, 1), 10),
-      maxPages: Math.min(Math.max(config.maxPages || 100, 1), 1000),
-      axeTags: config.axeTags || ["wcag2a", "wcag2aa"],
-      respectRobots: config.respectRobots !== false,
+      depth: isAdmin
+        ? Math.min(Math.max(config.depth || 3, 1), 10)
+        : 3,
+      maxPages: isAdmin
+        ? Math.min(Math.max(config.maxPages || 100, 1), 1000)
+        : 1,
+      axeTags: isAdmin
+        ? (config.axeTags || ["wcag2a", "wcag2aa"])
+        : ["wcag2a", "wcag2aa"],
+      respectRobots: true,
     };
 
     // Create scan record
@@ -82,7 +91,7 @@ export async function POST(req: NextRequest) {
       config: scanConfig,
     }, { status: 201 });
   } catch (error) {
-    console.error("[POST /api/scans] Error:", error);
+    logger.error({ err: error }, "POST /api/scans error");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -94,6 +103,9 @@ export async function GET(req: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { success, reset } = await apiLimiter.limit(user.userId);
+    if (!success) return rateLimitResponse(reset - Date.now());
 
     await connectDB();
     const Scan = mongoose.models.Scan;
@@ -127,7 +139,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[GET /api/scans] Error:", error);
+    logger.error({ err: error }, "GET /api/scans error");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

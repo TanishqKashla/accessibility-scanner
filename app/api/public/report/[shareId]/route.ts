@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connection";
+import { apiLimiter, rateLimitResponse } from "@/lib/ratelimit";
+import { logger } from "@/lib/logger";
 import mongoose from "mongoose";
 
 // GET /api/public/report/:shareId — Public report data (no auth required)
@@ -9,6 +11,10 @@ export async function GET(
 ) {
   try {
     const { shareId } = await params;
+
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "anonymous";
+    const { success, reset } = await apiLimiter.limit(ip);
+    if (!success) return rateLimitResponse(reset - Date.now());
 
     await connectDB();
     const ShareLink = mongoose.models.ShareLink;
@@ -71,7 +77,7 @@ export async function GET(
       expiresAt: linkData.expiresAt,
     });
   } catch (error) {
-    console.error("[GET /api/public/report/:shareId] Error:", error);
+    logger.error({ err: error }, "GET /api/public/report/:shareId error");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { Worker, Job } from "bullmq";
 import { getRedisConnection } from "../connection";
+import { logger } from "../../logger";
 import { connectDB } from "../../db/connection";
 import { clearVisited } from "../../scanner/dedup";
 import { evaluateCompliance } from "../../compliance/engine";
@@ -152,11 +153,11 @@ export function createAggregateWorker() {
   });
 
   worker.on("completed", (job) => {
-    console.log(`[AggregateWorker] Job ${job.id} completed:`, job.returnvalue);
+    logger.info({ jobId: job.id, result: job.returnvalue }, "AggregateWorker completed");
   });
 
   worker.on("failed", (job, err) => {
-    console.error(`[AggregateWorker] Job ${job?.id} failed:`, err.message);
+    logger.error({ jobId: job?.id, err: err.message }, "AggregateWorker failed");
   });
 
   return worker;

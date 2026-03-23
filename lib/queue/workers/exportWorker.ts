@@ -1,6 +1,7 @@
 import { Worker, Job } from "bullmq";
 import { getRedisConnection } from "../connection";
 import { connectDB } from "../../db/connection";
+import { logger } from "../../logger";
 import mongoose from "mongoose";
 
 interface ExportJobData {
@@ -18,7 +19,7 @@ async function processExportJob(job: Job<ExportJobData>) {
 
   // Export logic will be fully implemented in Phase 6
   // For now, mark the export as ready
-  console.log(`[ExportWorker] Processing ${format} export for report ${reportId}`);
+  logger.info({ format, reportId }, "ExportWorker processing");
 
   await job.updateProgress(100);
 
@@ -32,11 +33,11 @@ export function createExportWorker() {
   });
 
   worker.on("completed", (job) => {
-    console.log(`[ExportWorker] Job ${job.id} completed:`, job.returnvalue);
+    logger.info({ jobId: job.id, result: job.returnvalue }, "ExportWorker completed");
   });
 
   worker.on("failed", (job, err) => {
-    console.error(`[ExportWorker] Job ${job?.id} failed:`, err.message);
+    logger.error({ jobId: job?.id, err: err.message }, "ExportWorker failed");
   });
 
   return worker;

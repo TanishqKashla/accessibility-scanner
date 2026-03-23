@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connection";
 import { verifyAuth } from "@/lib/auth/middleware";
+import { apiLimiter, rateLimitResponse } from "@/lib/ratelimit";
+import { logger } from "@/lib/logger";
 import mongoose from "mongoose";
 
 // GET /api/scans/:scanId — Get scan status and details
@@ -13,6 +15,9 @@ export async function GET(
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { success, reset } = await apiLimiter.limit(user.userId);
+    if (!success) return rateLimitResponse(reset - Date.now());
 
     const { scanId } = await params;
 
@@ -38,7 +43,7 @@ export async function GET(
       report: report || null,
     });
   } catch (error) {
-    console.error("[GET /api/scans/:scanId] Error:", error);
+    logger.error({ err: error }, "GET /api/scans/:scanId error");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

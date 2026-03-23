@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { connectDB } from "@/lib/db/connection";
 import { verifyAuth } from "@/lib/auth/middleware";
+import { logger } from "@/lib/logger";
 import mongoose from "mongoose";
 
 // GET /api/scans/:scanId/progress — SSE endpoint for live scan updates
@@ -59,7 +60,7 @@ export async function GET(
             controller.close();
           }
         } catch (error) {
-          console.error("[SSE] Error polling scan:", error);
+          logger.error({ err: error }, "SSE polling error");
         }
       }, 2000);
 

@@ -18,6 +18,7 @@ import Button from "@/components/ui/Button";
 export default function NewScanPage() {
   const router = useRouter();
   const { data: session } = useSession();
+  const isAdmin = (session?.user as { role?: string })?.role === "admin";
   const [url, setUrl] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [config, setConfig] = useState({
@@ -60,12 +61,14 @@ export default function NewScanPage() {
         },
         body: JSON.stringify({
           targetUrl: url,
-          config: {
-            depth: config.depth,
-            maxPages: config.maxPages,
-            axeTags: rulesetToTags(config.ruleset),
-            respectRobots: config.respectRobots,
-          },
+          config: isAdmin
+            ? {
+              depth: config.depth,
+              maxPages: config.maxPages,
+              axeTags: rulesetToTags(config.ruleset),
+              respectRobots: config.respectRobots,
+            }
+            : {},
         }),
       });
 
@@ -139,21 +142,23 @@ export default function NewScanPage() {
             </p>
           </div>
 
-          {/* Advanced Settings Toggle */}
-          <button
-            type="button"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary-hover transition-colors"
-          >
-            <Settings2 className="h-4 w-4" />
-            Advanced Settings
-            <ChevronDown
-              className={`h-4 w-4 transition-transform duration-200 ${showAdvanced ? "rotate-180" : ""}`}
-            />
-          </button>
+          {/* Advanced Settings Toggle — admin only */}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary-hover transition-colors"
+            >
+              <Settings2 className="h-4 w-4" />
+              Advanced Settings
+              <ChevronDown
+                className={`h-4 w-4 transition-transform duration-200 ${showAdvanced ? "rotate-180" : ""}`}
+              />
+            </button>
+          )}
 
           {/* Advanced Settings */}
-          {showAdvanced && (
+          {isAdmin && showAdvanced && (
             <div className="space-y-4 rounded-xl border border-border bg-sidebar p-4">
               {/* Crawl Depth */}
               <div className="grid grid-cols-2 gap-4">

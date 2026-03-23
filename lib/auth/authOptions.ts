@@ -22,18 +22,45 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
+        const email = credentials.email.trim().toLowerCase();
+        const password = credentials.password;
+
+        // Check for admin env credentials first
+        const adminEmail = process.env.ADMIN_ID?.trim().toLowerCase();
+        const adminPassword = process.env.ADMIN_PASSWORD;
+
+        if (adminEmail && adminPassword && email === adminEmail && password === adminPassword) {
+          await connectMongo();
+          let user = await User.findOne({ email: adminEmail });
+          if (!user) {
+            const org = await Organization.create({ name: "Admin" });
+            user = await User.create({
+              email: adminEmail,
+              role: "admin",
+              orgId: org._id,
+              name: "Admin",
+            });
+          }
+          if (user.role !== "admin") {
+            await User.findByIdAndUpdate(user._id, { role: "admin" });
+          }
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name ?? null,
+            orgId: user.orgId.toString(),
+            role: "admin",
+          };
+        }
+
+        // Normal DB login
         await connectMongo();
 
-        const user = await User.findOne({
-          email: credentials.email.trim().toLowerCase(),
-        });
+        const user = await User.findOne({ email });
 
         if (!user || !user.hashedPassword) return null;
 
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          user.hashedPassword
-        );
+        const isValid = await bcrypt.compare(password, user.hashedPassword);
         if (!isValid) return null;
 
         return {
@@ -66,7 +93,7 @@ export const authOptions: NextAuthOptions = {
           await User.create({
             email: profile.email,
             googleId: account.providerAccountId,
-            role: "admin",
+            role: "viewer",
             orgId: organization._id,
             name: profile.name ?? undefined,
           });

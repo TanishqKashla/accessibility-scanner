@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connection";
 import { verifyAuth } from "@/lib/auth/middleware";
 import { aggregateQueue } from "@/lib/queue/queues";
+import { logger } from "@/lib/logger";
 import mongoose from "mongoose";
 
 // POST /api/scans/:scanId/stop — Manually stop a running scan and generate a partial report
@@ -61,7 +62,7 @@ export async function POST(
       scanId,
     });
   } catch (error) {
-    console.error("[POST /api/scans/:scanId/stop] Error:", error);
+    logger.error({ err: error }, "POST /api/scans/:scanId/stop error");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
