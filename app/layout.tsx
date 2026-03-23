@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "EnableUser — Accessibility Scanner",
+  title: "EnableStack — Accessibility Scanner",
   description:
     "Enterprise-grade web accessibility scanning platform. Automated WCAG audits, compliance scoring, and actionable reports.",
 };

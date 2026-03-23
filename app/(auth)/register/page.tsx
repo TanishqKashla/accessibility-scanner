@@ -75,7 +75,7 @@ export default function RegisterPage() {
             <Shield className="h-6 w-6 text-white" strokeWidth={2.5} />
           </div>
           <span className="text-2xl font-bold text-foreground tracking-tight">
-            EnableUser
+            EnableStack
           </span>
         </Link>
         <p className="mt-3 text-sm text-muted">

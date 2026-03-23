@@ -466,7 +466,7 @@ export async function GET(
     </svg>
     <div>
       <div class="app-title">WCAG Accessibility Report</div>
-      <div class="app-subtitle">WCAG 2.1 AA — EnableUser Scanner</div>
+      <div class="app-subtitle">WCAG 2.1 AA — EnableStack Scanner</div>
     </div>
   </div>
 

@@ -4,7 +4,7 @@ import { normalizeUrl, isSameDomain } from "./normalizer";
 // requests without a recognized User-Agent (e.g. WordPress security plugins).
 const FETCH_HEADERS = {
   "User-Agent":
-    "Mozilla/5.0 (compatible; AccessibilityScanner/1.0; +https://github.com/enableuser)",
+    "Mozilla/5.0 (compatible; EnableStack/1.0; +https://github.com/enablestack)",
   Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 };
 

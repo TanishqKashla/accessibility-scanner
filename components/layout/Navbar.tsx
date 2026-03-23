@@ -37,7 +37,7 @@ export default function Navbar() {
             <Shield className="h-5 w-5 text-white" strokeWidth={2.5} />
           </div>
           <span className="text-lg font-bold text-white tracking-tight">
-            EnableUser
+            EnableStack
           </span>
         </Link>
       </div>

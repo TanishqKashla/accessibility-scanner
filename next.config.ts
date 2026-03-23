@@ -17,23 +17,15 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-<<<<<<< Updated upstream
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data:",
-      "font-src 'self'",
-      "connect-src 'self'",
-      "frame-ancestors 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-=======
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.opinionstage.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
       "font-src 'self' https://fonts.gstatic.com",
       "frame-src https://www.opinionstage.com",
       "connect-src 'self' https://www.opinionstage.com",
->>>>>>> Stashed changes
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
     ].join("; "),
   },
 ];
