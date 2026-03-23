@@ -67,7 +67,7 @@ export async function POST(
       password: hashedPassword,
     });
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || `${process.env.NEXTAUTH_URL || ""}`;
 
     return NextResponse.json({
       shareId: shareLink.shareId,

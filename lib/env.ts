@@ -20,7 +20,7 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional().default(""),
 
   // Application
-  NEXT_PUBLIC_APP_URL: z.string().default("http://localhost:3000"),
+  NEXT_PUBLIC_APP_URL: z.string().min(1, "NEXT_PUBLIC_APP_URL is required"),
 });
 
 export type Env = z.infer<typeof envSchema>;
