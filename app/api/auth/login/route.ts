@@ -1,15 +1,20 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import connectMongo from "@/lib/db/connection";
 import User from "@/lib/db/models/User";
 import { signJWT } from "@/lib/auth/jwt";
+import { authLimiter, rateLimitResponse } from "@/lib/ratelimit";
 
 interface LoginBody {
   email?: string;
   password?: string;
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ?? "anonymous";
+  const { success, reset } = await authLimiter.limit(ip);
+  if (!success) return rateLimitResponse(reset - Date.now());
+
   const body = (await request.json()) as LoginBody;
   const email = body.email?.trim().toLowerCase();
   const password = body.password?.trim();

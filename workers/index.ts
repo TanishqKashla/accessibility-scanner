@@ -116,6 +116,7 @@ async function shutdown() {
   clearInterval(queueLogInterval);
   await Promise.all(workers.map((w) => w.close()));
   await closeBrowser();
+  await mongoose.disconnect().catch(() => {});
   console.log("Workers stopped. Goodbye.");
   process.exit(0);
 }
