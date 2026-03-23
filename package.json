@@ -3,7 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
+<<<<<<< Updated upstream
     "node": ">=20"
+=======
+    "node": ">=20.0.0"
+>>>>>>> Stashed changes
   },
   "scripts": {
     "dev": "next dev",
@@ -11,6 +15,7 @@
     "start": "next start",
     "lint": "eslint",
     "workers": "tsx --env-file=.env.local workers/index.ts",
+    "workers:prod": "tsx workers/index.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

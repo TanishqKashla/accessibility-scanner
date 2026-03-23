@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
-import PollWidget from "@/components/PollWidget";
+import PollWidgetLoader from "@/components/PollWidgetLoader";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -32,7 +32,7 @@ export default function RootLayout({
         </a>
         <Providers>
           {children}
-          <PollWidget />
+          <PollWidgetLoader />
         </Providers>
       </body>
     </html>

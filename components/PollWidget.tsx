@@ -5,12 +5,10 @@ import { X, MessageSquare } from "lucide-react";
 
 export default function PollWidget() {
   const [open, setOpen] = useState(false);
-  const [ready, setReady] = useState(false);
   const scriptLoaded = useRef(false);
 
   // Auto-open on first visit
   useEffect(() => {
-    setReady(true);
     const seen = sessionStorage.getItem("poll-seen");
     if (!seen) {
       const timer = setTimeout(() => {
@@ -21,9 +19,9 @@ export default function PollWidget() {
     }
   }, []);
 
-  // Load OpinionStage SDK once (using the same insertion method as the official embed)
+  // Load OpinionStage SDK once
   useEffect(() => {
-    if (!ready || scriptLoaded.current) return;
+    if (scriptLoaded.current) return;
     scriptLoaded.current = true;
 
     if (document.getElementById("os-widget-jssdk")) return;
@@ -36,7 +34,7 @@ export default function PollWidget() {
       Math.floor(new Date().getTime() / 1000000);
     const sjs = document.getElementsByTagName("script")[0];
     sjs.parentNode!.insertBefore(js, sjs);
-  }, [ready]);
+  }, []);
 
   // Re-init SDK when widget opens so it finds the freshly mounted div
   useEffect(() => {
@@ -51,8 +49,6 @@ export default function PollWidget() {
     }, 150);
     return () => clearTimeout(timer);
   }, [open]);
-
-  if (!ready) return null;
 
   return (
     <>
