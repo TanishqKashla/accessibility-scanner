@@ -7,12 +7,9 @@
       "Bash(npx tsc:*)",
       "Bash(npx vitest:*)",
       "Bash(grep -v \"^\\\\.\\\\.$\")",
-<<<<<<< Updated upstream
       "Bash(npm test:*)",
-      "Bash(grep -r \"CAPTCHA\\\\|reCAPTCHA\\\\|honeypot\" '/d/TANISHQ KASHLA/EnableUser/accessibility-scanner-website' --include=*.ts --include=*.tsx)"
-=======
+      "Bash(grep -r \"CAPTCHA\\\\|reCAPTCHA\\\\|honeypot\" '/d/TANISHQ KASHLA/EnableUser/accessibility-scanner-website' --include=*.ts --include=*.tsx)",
       "Bash(find '/d/TANISHQ KASHLA/EnableUser/accessibility-scanner-website' -type f \\\\\\(-name Dockerfile -o -name docker-compose* -o -name .github -o -name *.yml -o -name *.yaml \\\\\\))"
->>>>>>> Stashed changes
     ]
   }
 }
