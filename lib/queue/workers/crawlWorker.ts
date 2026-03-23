@@ -2,6 +2,7 @@ import { Worker, Job } from "bullmq";
 import crypto from "crypto";
 import { getRedisConnection } from "../connection";
 import { crawlQueue, aggregateQueue } from "../queues";
+import { logger } from "../../logger";
 import { normalizeUrl, isSameDomain, isScannableUrl } from "../../scanner/normalizer";
 import { markVisited, getVisitedCount } from "../../scanner/dedup";
 // Priority scoring removed — BullMQ v5's prioritized sorted set mechanism
@@ -38,7 +39,7 @@ async function decrementAndMaybeAggregate(scanId: string): Promise<void> {
   if (pending <= 0) {
     const acquired = await redis.set(LOCK_KEY(scanId), "1", "EX", 300, "NX");
     if (acquired) {
-      console.log(`[CrawlWorker] All jobs done for scan ${scanId} — triggering aggregation`);
+      logger.info({ scanId }, "All crawl jobs done, triggering aggregation");
       await aggregateQueue.add(
         "aggregate",
         { scanId },
@@ -220,19 +221,19 @@ export function createCrawlWorker() {
   });
 
   worker.on("active", (job) => {
-    console.log(`[CrawlWorker] Starting: ${job.data.url}`);
+    logger.info({ url: job.data.url }, "CrawlWorker starting");
   });
 
   worker.on("completed", (job) => {
-    console.log(`[CrawlWorker] Done: ${job.data.url} — ${job.returnvalue?.issuesFound ?? 0} issues`);
+    logger.info({ url: job.data.url, issues: job.returnvalue?.issuesFound ?? 0 }, "CrawlWorker done");
   });
 
   worker.on("failed", (job, err) => {
-    console.error(`[CrawlWorker] Failed: ${job?.data?.url} — ${err.message}`);
+    logger.error({ url: job?.data?.url, err: err.message }, "CrawlWorker failed");
   });
 
   worker.on("stalled", (jobId) => {
-    console.warn(`[CrawlWorker] Stalled job detected: ${jobId}`);
+    logger.warn({ jobId }, "CrawlWorker stalled job detected");
   });
 
   return worker;

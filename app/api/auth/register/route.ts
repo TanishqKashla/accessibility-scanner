@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
   const user = await User.create({
     email,
     hashedPassword,
-    role: "admin",
+    role: "viewer",
     orgId: organization._id,
     name,
   });

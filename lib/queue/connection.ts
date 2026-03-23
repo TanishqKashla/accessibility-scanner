@@ -1,4 +1,5 @@
 import IORedis from "ioredis";
+import { logger } from "../logger";
 
 let connection: IORedis | null = null;
 
@@ -17,11 +18,11 @@ export function getRedisConnection(): IORedis {
   });
 
   connection.on("error", (err: Error) => {
-    console.error("[Redis] Connection error:", err.message);
+    logger.error({ err }, "Redis connection error");
   });
 
   connection.on("connect", () => {
-    console.log("[Redis] Connected successfully");
+    logger.info("Redis connected");
   });
 
   return connection;

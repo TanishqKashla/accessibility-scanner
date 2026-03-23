@@ -1,4 +1,5 @@
 import { chromium, Browser, BrowserContext, Page } from "playwright";
+import { logger } from "../logger";
 
 const VIEWPORT = { width: 1280, height: 720 };
 const USER_AGENT =
@@ -44,7 +45,7 @@ async function getBrowser(): Promise<Browser> {
   });
 
   browserInstance.on("disconnected", () => {
-    console.warn("[BrowserPool] Browser disconnected — will relaunch on next request");
+    logger.warn("Browser disconnected, will relaunch on next request");
     browserInstance = null;
     activeContexts = 0;
   });

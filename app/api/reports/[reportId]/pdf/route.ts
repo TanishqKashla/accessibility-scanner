@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connection";
 import { verifyAuth } from "@/lib/auth/middleware";
+import { apiLimiter, rateLimitResponse } from "@/lib/ratelimit";
+import { logger } from "@/lib/logger";
 import { generatePdfFromHtml } from "@/lib/export/pdf";
 import mongoose from "mongoose";
 
@@ -14,6 +16,9 @@ export async function GET(
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { success, reset } = await apiLimiter.limit(user.userId);
+    if (!success) return rateLimitResponse(reset - Date.now());
 
     const { reportId } = await params;
 
@@ -682,7 +687,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("[GET /api/reports/:reportId/pdf] Error:", error);
+    logger.error({ err: error }, "GET /api/reports/:reportId/pdf error");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

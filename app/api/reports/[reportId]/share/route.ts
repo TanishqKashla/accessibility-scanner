@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connection";
 import { verifyAuth } from "@/lib/auth/middleware";
+import { logger } from "@/lib/logger";
 import crypto from "crypto";
 import mongoose from "mongoose";
 
@@ -75,7 +76,7 @@ export async function POST(
       passwordProtected: !!password,
     }, { status: 201 });
   } catch (error) {
-    console.error("[POST /api/reports/:reportId/share] Error:", error);
+    logger.error({ err: error }, "POST /api/reports/:reportId/share error");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

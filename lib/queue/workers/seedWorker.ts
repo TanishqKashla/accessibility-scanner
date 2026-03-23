@@ -2,6 +2,7 @@ import { Worker, Job } from "bullmq";
 import crypto from "crypto";
 import { getRedisConnection } from "../connection";
 import { crawlQueue } from "../queues";
+import { logger } from "../../logger";
 import { discoverUrls, isDisallowed } from "../../scanner/sitemap";
 import { normalizeUrl, isScannableUrl } from "../../scanner/normalizer";
 import { markVisited } from "../../scanner/dedup";
@@ -171,11 +172,11 @@ export function createSeedWorker() {
   });
 
   worker.on("completed", (job) => {
-    console.log(`[SeedWorker] ${job.id} done:`, job.returnvalue);
+    logger.info({ jobId: job.id, result: job.returnvalue }, "SeedWorker done");
   });
 
   worker.on("failed", (job, err) => {
-    console.error(`[SeedWorker] ${job?.id} failed:`, err.message);
+    logger.error({ jobId: job?.id, err: err.message }, "SeedWorker failed");
   });
 
   return worker;

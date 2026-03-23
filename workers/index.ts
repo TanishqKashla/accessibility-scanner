@@ -15,10 +15,10 @@ import { closeBrowser } from "../lib/scanner/browserPool";
 import { aggregateQueue, crawlQueue } from "../lib/queue/queues";
 import { getRedisConnection } from "../lib/queue/connection";
 import { connectDB } from "../lib/db/connection";
+import { logger } from "../lib/logger";
 import mongoose from "mongoose";
 
-console.log("=== Accessibility Scanner Worker Process ===");
-console.log("Starting workers...\n");
+logger.info("Accessibility Scanner Worker Process starting");
 
 const workers = [
   createSeedWorker(),
@@ -27,12 +27,11 @@ const workers = [
   createExportWorker(),
 ];
 
-console.log(`Started ${workers.length} workers:`);
-console.log("  - SeedWorker (sitemap discovery & URL seeding)");
-console.log("  - CrawlWorker (page rendering & axe-core audit)");
-console.log("  - AggregateWorker (scoring & report generation)");
-console.log("  - ExportWorker (PDF/CSV/JSON export)\n");
-console.log("Waiting for jobs...\n");
+logger.info(
+  { count: workers.length, workers: ["SeedWorker", "CrawlWorker", "AggregateWorker", "ExportWorker"] },
+  "Workers started"
+);
+logger.info("Waiting for jobs");
 
 /**
  * Queue state logger — runs every 10 seconds during active scans.
@@ -42,7 +41,7 @@ async function logQueueState() {
     const counts = await crawlQueue.getJobCounts("waiting", "active", "prioritized", "delayed", "failed");
     const total = (counts.waiting ?? 0) + (counts.active ?? 0) + (counts.prioritized ?? 0) + (counts.delayed ?? 0);
     if (total > 0) {
-      console.log(`[Queue] crawl: waiting=${counts.waiting} active=${counts.active} prioritized=${counts.prioritized} delayed=${counts.delayed} failed=${counts.failed}`);
+      logger.info({ queue: "crawl", ...counts }, "Queue state");
     }
   } catch { /* ignore */ }
 }
@@ -89,7 +88,7 @@ async function monitorStuckScans() {
         );
         if (!acquired) continue; // crawlWorker already triggered it
 
-        console.log(`[Monitor] Scan ${scanId} stuck >5 min (pending=${pendingCount}) — triggering partial aggregation`);
+        logger.warn({ scanId, pendingCount }, "Scan stuck >5 min, triggering partial aggregation");
 
         await aggregateQueue.add(
           "aggregate",
@@ -102,7 +101,7 @@ async function monitorStuckScans() {
     }
   } catch (err) {
     // Don't crash the monitor
-    console.error("[Monitor] Error:", (err as Error).message);
+    logger.error({ err }, "Monitor error");
   }
 }
 
@@ -111,13 +110,13 @@ const monitorInterval = setInterval(monitorStuckScans, 15_000);
 
 // Graceful shutdown
 async function shutdown() {
-  console.log("\nShutting down workers...");
+  logger.info("Shutting down workers");
   clearInterval(monitorInterval);
   clearInterval(queueLogInterval);
   await Promise.all(workers.map((w) => w.close()));
   await closeBrowser();
   await mongoose.disconnect().catch(() => {});
-  console.log("Workers stopped. Goodbye.");
+  logger.info("Workers stopped");
   process.exit(0);
 }
 

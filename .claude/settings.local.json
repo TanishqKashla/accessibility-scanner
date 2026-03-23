@@ -6,7 +6,9 @@
       "Bash(npm install:*)",
       "Bash(npx tsc:*)",
       "Bash(npx vitest:*)",
-      "Bash(grep -v \"^\\\\.\\\\.$\")"
+      "Bash(grep -v \"^\\\\.\\\\.$\")",
+      "Bash(npm test:*)",
+      "Bash(grep -r \"CAPTCHA\\\\|reCAPTCHA\\\\|honeypot\" '/d/TANISHQ KASHLA/EnableUser/accessibility-scanner-website' --include=*.ts --include=*.tsx)"
     ]
   }
 }

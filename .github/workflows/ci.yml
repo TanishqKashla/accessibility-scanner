@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          MONGODB_URI: mongodb://localhost:27017/test
+          REDIS_URL: redis://localhost:6379
+          UPSTASH_REDIS_REST_URL: https://fake-ci.upstash.io
+          UPSTASH_REDIS_REST_TOKEN: fake-ci-token
+          JWT_SECRET: ci-test-secret-minimum-16
+          NEXTAUTH_SECRET: ci-test-secret-minimum-16
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
